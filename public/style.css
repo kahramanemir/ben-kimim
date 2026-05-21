@@ -1,0 +1,105 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #f4f5f7;
+  color: #1a1a2e;
+  -webkit-tap-highlight-color: transparent;
+}
+.screen {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  gap: 16px;
+  text-align: center;
+}
+.screen.active { display: flex; }
+.screen.dark { background: #15151f; color: #fff; }
+
+h1 { font-size: 2.4rem; margin-bottom: 12px; }
+h2 { font-size: 1.2rem; color: #555; }
+
+input {
+  width: 100%;
+  max-width: 360px;
+  font-size: 1.2rem;
+  padding: 14px 16px;
+  border: 2px solid #ccd;
+  border-radius: 12px;
+  text-align: center;
+}
+button {
+  width: 100%;
+  max-width: 360px;
+  font-size: 1.2rem;
+  padding: 14px 16px;
+  border: none;
+  border-radius: 12px;
+  background: #e3e3ef;
+  color: #1a1a2e;
+  cursor: pointer;
+}
+button.primary { background: #4f46e5; color: #fff; }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+.divider { color: #999; font-size: 0.95rem; }
+
+.code {
+  font-size: 2.6rem;
+  font-weight: 800;
+  letter-spacing: 6px;
+  color: #4f46e5;
+}
+.note { color: #666; font-size: 0.95rem; }
+.label { font-size: 1.1rem; color: #444; }
+.label.light { color: #ddd; }
+.target { font-size: 2rem; font-weight: 700; color: #4f46e5; }
+
+#player-list {
+  list-style: none;
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.player {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 1.1rem;
+}
+.player.offline { opacity: 0.5; }
+.reorder { display: flex; gap: 6px; }
+.reorder button {
+  width: 40px;
+  padding: 6px;
+  font-size: 1rem;
+}
+
+.countdown {
+  font-size: 7rem;
+  font-weight: 900;
+  color: #fff;
+}
+
+/* Oyun ekranı: telefonu alna koyunca büyük ve okunaklı */
+#screen-playing { background: #fff; justify-content: center; }
+.word {
+  font-size: 14vw;
+  line-height: 1.1;
+  font-weight: 900;
+  color: #111;
+  padding: 0 16px;
+  word-break: break-word;
+}
+.controls { margin-top: 32px; display: flex; flex-direction: column; gap: 12px; width: 100%; align-items: center; }
+
+@media (min-width: 600px) {
+  .word { font-size: 5rem; }
+}

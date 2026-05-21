@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Ben Kimim</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <!-- ANA SAYFA -->
+  <section id="screen-home" class="screen active">
+    <h1>Ben Kimim</h1>
+    <input id="nickname" type="text" maxlength="20" placeholder="Takma adın" />
+    <button id="btn-create" class="primary">Oda Kur</button>
+    <div class="divider">veya</div>
+    <input id="join-code" type="text" maxlength="5" placeholder="Oda kodu" autocapitalize="characters" />
+    <button id="btn-join">Odaya Katıl</button>
+  </section>
+
+  <!-- LOBİ -->
+  <section id="screen-lobby" class="screen">
+    <h2>Oda Kodu</h2>
+    <div id="lobby-code" class="code"></div>
+    <ul id="player-list"></ul>
+    <p id="lobby-note" class="note"></p>
+    <button id="btn-start" class="primary">Başlat</button>
+  </section>
+
+  <!-- İSİM YAZMA -->
+  <section id="screen-writing" class="screen">
+    <div id="writing-form-wrap">
+      <p class="label">Şu kişiye bir isim yaz:</p>
+      <div id="writing-target" class="target"></div>
+      <form id="name-form">
+        <input id="name-input" type="text" maxlength="40" placeholder="Örn: Cüneyt Arkın" />
+        <button type="submit" class="primary">Gönder</button>
+      </form>
+    </div>
+    <div id="writing-wait" style="display:none">
+      <p class="label">Diğerleri yazıyor…</p>
+      <div id="writing-count" class="code"></div>
+    </div>
+  </section>
+
+  <!-- GERİ SAYIM -->
+  <section id="screen-countdown" class="screen dark">
+    <div id="countdown-number" class="countdown"></div>
+    <p class="label light">Telefonu alnına koy!</p>
+  </section>
+
+  <!-- OYUN -->
+  <section id="screen-playing" class="screen">
+    <div id="the-word" class="word"></div>
+    <div id="host-controls" class="controls" style="display:none">
+      <button id="btn-again" class="primary">Tekrar Oyna</button>
+      <button id="btn-lobby">Lobiye Dön</button>
+    </div>
+  </section>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

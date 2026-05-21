@@ -4,6 +4,11 @@ const {
   targetOf,
   wordFor,
   allNamesSubmitted,
+  reorderPlayer,
+  resetWrittenNames,
+  generateCode,
+  CODE_LENGTH,
+  CODE_ALPHABET,
 } = require('../src/rooms');
 
 function mk(ids) {
@@ -39,4 +44,35 @@ test('allNamesSubmitted: hepsi dolu mu', () => {
   assert.strictEqual(allNamesSubmitted(p), true);
   p[1].writtenName = ''; // bos isim sayilmaz
   assert.strictEqual(allNamesSubmitted(p), false);
+});
+
+test('reorderPlayer: yukarı/aşağı taşır, yeni dizi döner', () => {
+  const p = mk(['A', 'B', 'C']);
+  const up = reorderPlayer(p, 'B', 'up');
+  assert.deepStrictEqual(up.map((x) => x.id), ['B', 'A', 'C']);
+  const down = reorderPlayer(p, 'B', 'down');
+  assert.deepStrictEqual(down.map((x) => x.id), ['A', 'C', 'B']);
+  assert.deepStrictEqual(p.map((x) => x.id), ['A', 'B', 'C']); // orijinal değişmez
+});
+
+test('reorderPlayer: sınırlarda değişiklik yok', () => {
+  const p = mk(['A', 'B', 'C']);
+  assert.deepStrictEqual(reorderPlayer(p, 'A', 'up').map((x) => x.id), ['A', 'B', 'C']);
+  assert.deepStrictEqual(reorderPlayer(p, 'C', 'down').map((x) => x.id), ['A', 'B', 'C']);
+});
+
+test('resetWrittenNames: tüm yazılan isimleri temizler', () => {
+  const p = mk(['A', 'B']);
+  p.forEach((x) => (x.writtenName = 'x'));
+  const r = resetWrittenNames(p);
+  assert.ok(r.every((x) => x.writtenName === null));
+  assert.ok(p.every((x) => x.writtenName === 'x')); // orijinal değişmez
+});
+
+test('generateCode: doğru uzunluk ve sadece izinli karakterler', () => {
+  for (let i = 0; i < 50; i++) {
+    const code = generateCode();
+    assert.strictEqual(code.length, CODE_LENGTH);
+    assert.ok([...code].every((ch) => CODE_ALPHABET.includes(ch)));
+  }
 });

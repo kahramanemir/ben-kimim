@@ -1,5 +1,32 @@
+// Karışması kolay karakterler (I, O, 0, 1) çıkarıldı.
+const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const CODE_LENGTH = 5;
+
+function generateCode() {
+  let code = '';
+  for (let i = 0; i < CODE_LENGTH; i++) {
+    code += CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)];
+  }
+  return code;
+}
+
 function indexOfPlayer(players, playerId) {
   return players.findIndex((p) => p.id === playerId);
+}
+
+// Oyuncuyu listede yukarı/aşağı taşır. YENİ dizi döner.
+function reorderPlayer(players, playerId, direction) {
+  const i = players.findIndex((p) => p.id === playerId);
+  if (i === -1) return players;
+  const j = direction === 'up' ? i - 1 : i + 1;
+  if (j < 0 || j >= players.length) return players;
+  const next = players.slice();
+  [next[i], next[j]] = [next[j], next[i]];
+  return next;
+}
+
+function resetWrittenNames(players) {
+  return players.map((p) => ({ ...p, writtenName: null }));
 }
 
 // playerId'nin isim YAZACAĞI kişi (halkada bir sonraki).
@@ -24,4 +51,14 @@ function allNamesSubmitted(players) {
   );
 }
 
-module.exports = { indexOfPlayer, targetOf, wordFor, allNamesSubmitted };
+module.exports = {
+  CODE_ALPHABET,
+  CODE_LENGTH,
+  generateCode,
+  indexOfPlayer,
+  targetOf,
+  wordFor,
+  allNamesSubmitted,
+  reorderPlayer,
+  resetWrittenNames,
+};

@@ -12,7 +12,7 @@ const {
 } = require('./src/rooms');
 
 const PORT = process.env.PORT || 3000;
-const COUNTDOWN_SECONDS = 5;
+const COUNTDOWN_SECONDS = Number(process.env.COUNTDOWN_SECONDS) || 5;
 const EMPTY_ROOM_TTL_MS = 30 * 60 * 1000;
 
 const app = express();

@@ -6,7 +6,10 @@ if (!playerId) {
   playerId = 'p_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
   localStorage.setItem('benkimim_pid', playerId);
 }
-let myCode = localStorage.getItem('benkimim_code') || null;
+// Oda kodu sessionStorage'da tutulur: aynı sekmede yenileme/kopma sonrası
+// odaya geri dönülür, ama site yeni sekmede ya da sonradan açıldığında eski
+// odaya otomatik atmaz (ana sayfaya gelir).
+let myCode = sessionStorage.getItem('benkimim_code') || null;
 let myName = localStorage.getItem('benkimim_name') || '';
 let isHost = false;
 let wakeLock = null;
@@ -59,7 +62,7 @@ document.getElementById('btn-create').addEventListener('click', () => {
   socket.emit('create_room', { nickname, playerId }, (res) => {
     if (!res || !res.ok) return alert((res && res.error) || 'Hata');
     myCode = res.code;
-    localStorage.setItem('benkimim_code', myCode);
+    sessionStorage.setItem('benkimim_code', myCode);
   });
 });
 
@@ -73,7 +76,7 @@ document.getElementById('btn-join').addEventListener('click', () => {
   socket.emit('join_room', { code, nickname, playerId }, (res) => {
     if (!res || !res.ok) return alert((res && res.error) || 'Hata');
     myCode = res.code;
-    localStorage.setItem('benkimim_code', myCode);
+    sessionStorage.setItem('benkimim_code', myCode);
   });
 });
 
@@ -120,6 +123,24 @@ function renderLobby(data) {
 }
 
 document.getElementById('btn-start').addEventListener('click', () => socket.emit('start_writing'));
+
+// Odadan bilinçli çıkış: sunucudan ayrıl, kayıtlı kodu temizle, ana sayfaya dön.
+function leaveRoom() {
+  socket.emit('leave_room');
+  myCode = null;
+  sessionStorage.removeItem('benkimim_code');
+  if (countdownTimer) clearInterval(countdownTimer);
+  if (revealTimer) clearInterval(revealTimer);
+  releaseWakeLock();
+  showScreen('home');
+}
+
+document.getElementById('btn-leave-lobby').addEventListener('click', () => {
+  if (confirm('Odadan ayrılmak istediğine emin misin?')) leaveRoom();
+});
+document.getElementById('btn-leave-playing').addEventListener('click', () => {
+  if (confirm('Odadan ayrılmak istediğine emin misin?')) leaveRoom();
+});
 
 // ---- İsim yazma ----
 document.getElementById('name-form').addEventListener('submit', (e) => {
@@ -178,7 +199,7 @@ socket.on('connect', () => {
   if (myCode && myName) {
     socket.emit('join_room', { code: myCode, nickname: myName, playerId }, (res) => {
       if (!res || !res.ok) {
-        localStorage.removeItem('benkimim_code');
+        sessionStorage.removeItem('benkimim_code');
         myCode = null;
         showScreen('home');
       }

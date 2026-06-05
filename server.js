@@ -167,6 +167,27 @@ io.on('connection', (socket) => {
     broadcastRoom(room);
   });
 
+  // Oyuncu bilinçli olarak odadan ayrılır: tamamen listeden çıkarılır.
+  socket.on('leave_room', () => {
+    const room = store.getRoom(myCode);
+    if (!room) return;
+    const wasHost = room.hostId === myPlayerId;
+    room.players = room.players.filter((p) => p.id !== myPlayerId);
+    socket.leave(room.code);
+    // Host ayrıldıysa en erken katılmış bağlı oyuncuya devret.
+    if (wasHost) {
+      const next = room.players.find((p) => p.connected);
+      if (next) room.hostId = next.id;
+    }
+    if (room.players.length === 0) {
+      store.deleteRoom(room.code);
+    } else {
+      broadcastRoom(room);
+    }
+    myCode = null;
+    myPlayerId = null;
+  });
+
   socket.on('disconnect', () => {
     const room = store.getRoom(myCode);
     if (!room) return;

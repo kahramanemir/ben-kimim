@@ -11,6 +11,11 @@ let myName = localStorage.getItem('benkimim_name') || '';
 let isHost = false;
 let wakeLock = null;
 let countdownTimer = null;
+let revealTimer = null;
+let myWord = '';
+
+// Oyuncu kim olduğunu görmeden önce beklemesi gereken süre.
+const REVEAL_SECONDS = 15;
 
 const screens = {
   home: document.getElementById('screen-home'),
@@ -130,6 +135,44 @@ document.getElementById('name-form').addEventListener('submit', (e) => {
 document.getElementById('btn-again').addEventListener('click', () => socket.emit('play_again'));
 document.getElementById('btn-lobby').addEventListener('click', () => socket.emit('return_to_lobby'));
 
+// ---- Kim olduğunu öğrenme akışı ----
+// Oyun başlayınca kelime gizli kalır: önce 15 sn sayaç, sonra "Ben Kimim?" butonu çıkar.
+function startReveal(word) {
+  myWord = word || '';
+  const waitEl = document.getElementById('reveal-wait');
+  const timerEl = document.getElementById('reveal-timer');
+  const revealBtn = document.getElementById('btn-reveal');
+  const wordEl = document.getElementById('the-word');
+
+  // Başlangıç durumuna sıfırla.
+  if (revealTimer) clearInterval(revealTimer);
+  wordEl.style.display = 'none';
+  wordEl.textContent = '';
+  revealBtn.style.display = 'none';
+  waitEl.style.display = '';
+
+  let n = REVEAL_SECONDS;
+  timerEl.textContent = n;
+  revealTimer = setInterval(() => {
+    n -= 1;
+    timerEl.textContent = n;
+    if (n <= 0) {
+      clearInterval(revealTimer);
+      revealTimer = null;
+      waitEl.style.display = 'none';
+      revealBtn.style.display = '';
+    }
+  }, 1000);
+}
+
+document.getElementById('btn-reveal').addEventListener('click', () => {
+  if (!confirm('Emin misin? Kim olduğunu göreceksin.')) return;
+  document.getElementById('btn-reveal').style.display = 'none';
+  const wordEl = document.getElementById('the-word');
+  wordEl.textContent = myWord;
+  wordEl.style.display = '';
+});
+
 // ---- Socket olayları ----
 socket.on('connect', () => {
   if (myCode && myName) {
@@ -187,8 +230,8 @@ socket.on('countdown_started', (data) => {
 });
 
 socket.on('game_started', (data) => {
-  document.getElementById('the-word').textContent = data.yourWord || '';
   document.getElementById('host-controls').style.display = isHost ? '' : 'none';
   showScreen('playing');
+  startReveal(data.yourWord);
   requestWakeLock();
 });

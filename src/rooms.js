@@ -25,6 +25,16 @@ function reorderPlayer(players, playerId, direction) {
   return next;
 }
 
+// Oyuncu sırasını rastgele karıştırır (Fisher-Yates). YENİ dizi döner.
+function shufflePlayers(players) {
+  const next = players.slice();
+  for (let i = next.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [next[i], next[j]] = [next[j], next[i]];
+  }
+  return next;
+}
+
 function resetWrittenNames(players) {
   return players.map((p) => ({ ...p, writtenName: null }));
 }
@@ -60,5 +70,6 @@ module.exports = {
   wordFor,
   allNamesSubmitted,
   reorderPlayer,
+  shufflePlayers,
   resetWrittenNames,
 };

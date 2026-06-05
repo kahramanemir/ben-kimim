@@ -5,6 +5,7 @@ const {
   wordFor,
   allNamesSubmitted,
   reorderPlayer,
+  shufflePlayers,
   resetWrittenNames,
   generateCode,
   CODE_LENGTH,
@@ -59,6 +60,17 @@ test('reorderPlayer: sınırlarda değişiklik yok', () => {
   const p = mk(['A', 'B', 'C']);
   assert.deepStrictEqual(reorderPlayer(p, 'A', 'up').map((x) => x.id), ['A', 'B', 'C']);
   assert.deepStrictEqual(reorderPlayer(p, 'C', 'down').map((x) => x.id), ['A', 'B', 'C']);
+});
+
+test('shufflePlayers: aynı oyuncuları korur, yeni dizi döner', () => {
+  const p = mk(['A', 'B', 'C', 'D']);
+  const s = shufflePlayers(p);
+  assert.strictEqual(s.length, p.length);
+  assert.deepStrictEqual(
+    s.map((x) => x.id).sort(),
+    ['A', 'B', 'C', 'D']
+  );
+  assert.deepStrictEqual(p.map((x) => x.id), ['A', 'B', 'C', 'D']); // orijinal değişmez
 });
 
 test('resetWrittenNames: tüm yazılan isimleri temizler', () => {

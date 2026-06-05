@@ -8,6 +8,7 @@ const {
   wordFor,
   allNamesSubmitted,
   reorderPlayer,
+  shufflePlayers,
   resetWrittenNames,
 } = require('./src/rooms');
 
@@ -133,6 +134,13 @@ io.on('connection', (socket) => {
     const room = store.getRoom(myCode);
     if (!room || room.hostId !== myPlayerId || room.state !== 'lobby') return;
     room.players = reorderPlayer(room.players, playerId, direction);
+    broadcastRoom(room);
+  });
+
+  socket.on('shuffle_players', () => {
+    const room = store.getRoom(myCode);
+    if (!room || room.hostId !== myPlayerId || room.state !== 'lobby') return;
+    room.players = shufflePlayers(room.players);
     broadcastRoom(room);
   });
 

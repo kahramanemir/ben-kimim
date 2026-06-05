@@ -110,19 +110,24 @@ function renderLobby(data) {
     list.appendChild(li);
   });
   const startBtn = document.getElementById('btn-start');
+  const shuffleBtn = document.getElementById('btn-shuffle');
   const note = document.getElementById('lobby-note');
   if (isHost) {
     startBtn.style.display = '';
     startBtn.disabled = data.players.length < 3;
+    shuffleBtn.style.display = '';
+    shuffleBtn.disabled = data.players.length < 2;
     note.textContent =
       data.players.length < 3 ? 'Başlamak için en az 3 kişi gerekli' : 'Sırayı ayarla, hazırsan başlat';
   } else {
     startBtn.style.display = 'none';
+    shuffleBtn.style.display = 'none';
     note.textContent = 'Host başlatınca oyun başlayacak';
   }
 }
 
 document.getElementById('btn-start').addEventListener('click', () => socket.emit('start_writing'));
+document.getElementById('btn-shuffle').addEventListener('click', () => socket.emit('shuffle_players'));
 
 // Odadan bilinçli çıkış: sunucudan ayrıl, kayıtlı kodu temizle, ana sayfaya dön.
 function leaveRoom() {

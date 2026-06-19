@@ -101,9 +101,8 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 }
 .controls { margin-top: 32px; display: flex; flex-direction: column; gap: 12px; width: 100%; align-items: center; }
 
-/* Kim olduğunu öğrenmeden önceki bekleme/sayaç (beyaz zeminde okunaklı olsun) */
-#reveal-wait { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-#reveal-timer { font-size: 7rem; font-weight: 900; color: #4f46e5; }
+/* Kelime alında görünürken kalan süre göstergesi */
+.reveal-timer { margin-top: 20px; font-size: 1.4rem; font-weight: 700; color: #888; }
 #btn-reveal { font-size: 1.6rem; padding: 18px 16px; }
 
 @media (min-width: 600px) {

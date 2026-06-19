@@ -17,8 +17,8 @@ let countdownTimer = null;
 let revealTimer = null;
 let myWord = '';
 
-// Oyuncu kim olduğunu görmeden önce beklemesi gereken süre.
-const REVEAL_SECONDS = 15;
+// Kelimenin alında herkese açık göründüğü süre (sonra "Ben Kimim?" gelir).
+const REVEAL_SECONDS = 10;
 
 const screens = {
   home: document.getElementById('screen-home'),
@@ -162,30 +162,33 @@ document.getElementById('btn-again').addEventListener('click', () => socket.emit
 document.getElementById('btn-lobby').addEventListener('click', () => socket.emit('return_to_lobby'));
 
 // ---- Kim olduğunu öğrenme akışı ----
-// Oyun başlayınca kelime gizli kalır: önce 15 sn sayaç, sonra "Ben Kimim?" butonu çıkar.
+// Oyun başlayınca kelime önce 10 sn açıkça görünür (telefon alında, karşıdakiler
+// okur). Süre dolunca kelime gizlenir ve "Ben Kimim?" butonu çıkar.
 function startReveal(word) {
   myWord = word || '';
-  const waitEl = document.getElementById('reveal-wait');
   const timerEl = document.getElementById('reveal-timer');
   const revealBtn = document.getElementById('btn-reveal');
   const wordEl = document.getElementById('the-word');
 
-  // Başlangıç durumuna sıfırla.
   if (revealTimer) clearInterval(revealTimer);
-  wordEl.style.display = 'none';
-  wordEl.textContent = '';
+  // Kelimeyi göster + kalan süre sayacını başlat.
   revealBtn.style.display = 'none';
-  waitEl.style.display = '';
+  wordEl.textContent = myWord;
+  wordEl.style.display = '';
 
   let n = REVEAL_SECONDS;
-  timerEl.textContent = n;
+  timerEl.textContent = n + ' sn';
+  timerEl.style.display = '';
   revealTimer = setInterval(() => {
     n -= 1;
-    timerEl.textContent = n;
-    if (n <= 0) {
+    if (n > 0) {
+      timerEl.textContent = n + ' sn';
+    } else {
+      // Süre doldu: kelimeyi gizle, "Ben Kimim?" butonunu çıkar.
       clearInterval(revealTimer);
       revealTimer = null;
-      waitEl.style.display = 'none';
+      timerEl.style.display = 'none';
+      wordEl.style.display = 'none';
       revealBtn.style.display = '';
     }
   }, 1000);

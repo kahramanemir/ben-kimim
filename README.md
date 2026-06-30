@@ -1,20 +1,23 @@
-# Ben Kimim
+# Who Am I
 
-Aynı odadaki 3-10 arkadaşın kendi telefonlarından oynadığı "Ben Kimim" (alna koy)
-oyunu. Herkes sırayla bir sonrakine isim yazar; geri sayım sonrası her telefon o
-kişiye yazılan ismi gösterir. Bilen telefonu alnından alır. "Tekrar Oyna" ile yeni tur.
+A "Who Am I" (forehead) game played by 3-10 friends in the same room, each on their
+own phone. Everyone writes a name for the next player in turn; after a countdown, each
+phone shows the name assigned to its owner. Once you guess it, take the phone off your
+forehead. Start a new round with "Play Again".
 
-## Nasıl oynanır
+**Live demo:** [ben-kimim.onrender.com](https://ben-kimim.onrender.com)
 
-1. Biri **Oda Kur** der, çıkan 5 haneli kodu arkadaşlarına söyler.
-2. Herkes takma adı + kodla **Odaya Katıl**.
-3. Host lobide sırayı (zinciri) ayarlayıp **Başlat**.
-4. Herkes sıradaki kişiye bir isim yazar.
-5. Hepsi yazınca geri sayım başlar — telefonunu alnına koy.
-6. Telefonun, sana yazılan ismi gösterir; ipuçlarıyla kendini tahmin et.
-7. Tur bitince host **Tekrar Oyna** ile yeni tur başlatır.
+## How to play
 
-## Lokal çalıştırma
+1. Someone taps **Create Room** and shares the 5-digit code with friends.
+2. Everyone taps **Join Room** with a nickname + the code.
+3. The host arranges the order (chain) in the lobby and taps **Start**.
+4. Everyone writes a name for the next player.
+5. Once all names are in, the countdown begins — put your phone on your forehead.
+6. Your phone shows the name assigned to you; use the hints to guess who you are.
+7. When the round ends, the host starts a new one with **Play Again**.
+
+## Running locally
 
 ```bash
 npm install
@@ -22,30 +25,30 @@ npm start
 # http://localhost:3000
 ```
 
-Her oyuncu ayrı telefondan/cihazdan girer. Aynı bilgisayarda test için her oyuncuyu
-ayrı bir gizli (incognito) pencerede aç.
+Each player joins from a separate phone/device. To test on a single computer, open
+each player in a separate incognito (private) window.
 
-## Test
+## Tests
 
 ```bash
 npm test
 ```
 
-Birim testleri zincir/oda mantığını, entegrasyon testleri ise gerçek socket akışını
-(oda kurma/katılma, hedefler, sıra değiştirme, geri sayım→kelime, host devri, yeniden
-bağlanma) doğrular.
+Unit tests verify the chain/room logic, while integration tests verify the real socket
+flow (creating/joining a room, targets, reordering, countdown→word, host handover, and
+reconnection).
 
-## Render'a deploy
+## Deploying to Render
 
-1. Bu projeyi bir GitHub reposuna push'la.
-2. [render.com](https://render.com) → **New** → **Web Service** → GitHub reposunu bağla.
-3. Ayarlar:
+1. Push this project to a GitHub repository.
+2. [render.com](https://render.com) → **New** → **Web Service** → connect your GitHub repo.
+3. Settings:
    - **Build Command:** `npm install`
    - **Start Command:** `npm start`
-   - **Instance Type:** Free (yeterli)
-4. Deploy bitince verilen `https://...onrender.com` adresini arkadaşlarınla paylaş.
+   - **Instance Type:** Free (sufficient)
+4. Once deployed, share the provided `https://...onrender.com` address with your friends.
 
-Notlar:
-- Sunucu `PORT` ortam değişkenini otomatik kullanır (Render bunu sağlar).
-- Ücretsiz katman boştayken uyur; ilk açılış ~30 sn sürebilir.
-- Oda durumu bellektedir; sunucu yeniden başlarsa açık odalar kaybolur.
+Notes:
+- The server uses the `PORT` environment variable automatically (Render provides it).
+- The free tier sleeps when idle; the first load may take ~30 s.
+- Room state is held in memory; if the server restarts, open rooms are lost.

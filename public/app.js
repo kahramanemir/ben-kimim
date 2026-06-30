@@ -12,6 +12,7 @@ if (!playerId) {
 let myCode = localStorage.getItem('benkimim_code') || null;
 let myName = localStorage.getItem('benkimim_name') || '';
 let isHost = false;
+let currentHostId = null;
 let wakeLock = null;
 let countdownTimer = null;
 let revealTimer = null;
@@ -91,8 +92,19 @@ document.getElementById('btn-join').addEventListener('click', () => {
 });
 
 // ---- Lobi ----
+function renderQR(code) {
+  const el = document.getElementById('lobby-qr');
+  el.innerHTML = '';
+  if (!code || typeof qrcode === 'undefined') return;
+  const qr = qrcode(0, 'M');
+  qr.addData(location.origin + '/?room=' + code);
+  qr.make();
+  el.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 1, scalable: true });
+}
+
 function renderLobby(data) {
   document.getElementById('lobby-code').textContent = myCode || '';
+  renderQR(myCode);
   const list = document.getElementById('player-list');
   list.innerHTML = '';
   data.players.forEach((p, idx) => {
@@ -116,6 +128,17 @@ function renderLobby(data) {
       ctrl.appendChild(up);
       ctrl.appendChild(down);
       li.appendChild(ctrl);
+      if (p.id !== playerId) {
+        const kick = document.createElement('button');
+        kick.className = 'kick';
+        kick.textContent = '✕';
+        kick.onclick = () => {
+          if (confirm(p.name + ' oyuncusunu atmak istiyor musun?')) {
+            socket.emit('kick_player', { playerId: p.id });
+          }
+        };
+        li.appendChild(kick);
+      }
     }
     list.appendChild(li);
   });
@@ -138,6 +161,26 @@ function renderLobby(data) {
 
 document.getElementById('btn-start').addEventListener('click', () => socket.emit('start_writing'));
 document.getElementById('btn-shuffle').addEventListener('click', () => socket.emit('shuffle_players'));
+
+document.getElementById('btn-copy').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(myCode || '');
+    const b = document.getElementById('btn-copy');
+    const old = b.textContent;
+    b.textContent = '✓ Kopyalandı';
+    setTimeout(() => { b.textContent = old; }, 1500);
+  } catch (e) { /* kopyalama desteklenmiyorsa sessiz geç */ }
+});
+
+const shareBtn = document.getElementById('btn-share');
+if (navigator.share) {
+  shareBtn.style.display = '';
+  shareBtn.addEventListener('click', () => {
+    navigator
+      .share({ title: 'Ben Kimim', text: 'Odama katıl: ' + myCode, url: location.origin + '/?room=' + myCode })
+      .catch(() => {});
+  });
+}
 
 // Odadan bilinçli çıkış: sunucudan ayrıl, kayıtlı kodu temizle, ana sayfaya dön.
 function leaveRoom() {
@@ -229,6 +272,7 @@ socket.on('connect', () => {
 
 socket.on('room_update', (data) => {
   isHost = data.hostId === playerId;
+  currentHostId = data.hostId;
   if (data.state === 'lobby') {
     renderLobby(data);
     showScreen('lobby');
@@ -238,6 +282,16 @@ socket.on('room_update', (data) => {
     document.getElementById('host-controls').style.display = isHost ? '' : 'none';
     showScreen('playing');
   }
+});
+
+socket.on('kicked', () => {
+  alert('Odadan atıldın');
+  myCode = null;
+  localStorage.removeItem('benkimim_code');
+  if (countdownTimer) clearInterval(countdownTimer);
+  if (revealTimer) clearInterval(revealTimer);
+  releaseWakeLock();
+  showScreen('home');
 });
 
 socket.on('writing_started', (data) => {

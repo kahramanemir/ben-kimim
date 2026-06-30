@@ -19,7 +19,7 @@ forehead. Start a new round with "Play Again".
 
 The host can reorder or **remove** players, suggest names by category while writing,
 and everyone gets a vibrate/beep when the countdown starts. After a round, tap
-**Bildim 🎉** when you guess yourself; the lobby shows who has guessed.
+**Bildim 🎉** when you guess yourself; the game screen shows who has guessed.
 
 ## Running locally
 

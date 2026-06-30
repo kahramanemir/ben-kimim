@@ -117,6 +117,7 @@ function sendPhaseState(sock, room, playerId) {
     sock.emit('countdown_started', { seconds: COUNTDOWN_SECONDS });
   } else if (room.state === 'playing') {
     sock.emit('game_started', { yourWord: wordFor(room.players, playerId) });
+    sock.emit('guesses', { players: guessesPayload(room.players) });
   }
 }
 

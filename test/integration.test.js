@@ -351,3 +351,48 @@ test('guessed: bilen oyuncu guesses yayınında işaretlenir', async (t) => {
   assert.ok(p2.guessedAt != null, 'p2 bildi işaretlenmeli');
   assert.strictEqual(p1.guessedAt, null, 'p1 henüz bilmedi');
 });
+
+test('oyun sırasında yeniden bağlanan oyuncu güncel bilenler listesini alır', async (t) => {
+  const server = await startServer();
+  const c1 = connect();
+  const c2 = connect();
+  const c3 = connect();
+  let c3b;
+  t.after(() => { c1.close(); c2.close(); if (c3b) c3b.close(); server.kill(); });
+
+  const created = await emitAck(c1, 'create_room', { nickname: 'Emir', playerId: 'p1' });
+  const code = created.code;
+  const sees3 = waitForPlayers(c1, 3);
+  await emitAck(c2, 'join_room', { code, nickname: 'Ali', playerId: 'p2' });
+  await emitAck(c3, 'join_room', { code, nickname: 'Veli', playerId: 'p3' });
+  await sees3;
+
+  const g1 = once(c1, 'game_started');
+  c1.emit('start_writing');
+  await once(c1, 'writing_started');
+  c1.emit('submit_name', { name: 'W1' });
+  c2.emit('submit_name', { name: 'W2' });
+  c3.emit('submit_name', { name: 'W3' });
+  await g1;
+
+  const guessed = once(c1, 'guesses');
+  c2.emit('guessed');
+  await guessed;
+
+  const p3Off = new Promise((resolve) => {
+    const h = (d) => {
+      const p3 = d.players.find((x) => x.id === 'p3');
+      if (p3 && !p3.connected) { c1.off('room_update', h); resolve(); }
+    };
+    c1.on('room_update', h);
+  });
+  c3.close();
+  await p3Off;
+
+  c3b = connect();
+  const reGuesses = once(c3b, 'guesses');
+  await emitAck(c3b, 'join_room', { code, nickname: 'Veli', playerId: 'p3' });
+  const data = await reGuesses;
+  const p2 = data.players.find((p) => p.id === 'p2');
+  assert.ok(p2.guessedAt != null, 'reconnect sonrası p2 bildi olarak görünmeli');
+});

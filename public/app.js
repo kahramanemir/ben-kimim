@@ -201,6 +201,9 @@ document.getElementById('btn-leave-lobby').addEventListener('click', () => {
 document.getElementById('btn-leave-playing').addEventListener('click', () => {
   if (confirm('Odadan ayrılmak istediğine emin misin?')) leaveRoom();
 });
+document.getElementById('btn-writing-lobby').addEventListener('click', () => {
+  if (confirm('Herkesi lobiye döndürmek istediğine emin misin?')) socket.emit('return_to_lobby');
+});
 document.getElementById('btn-leave-writing').addEventListener('click', () => {
   if (confirm('Odadan ayrılmak istediğine emin misin?')) leaveRoom();
 });
@@ -360,6 +363,7 @@ socket.on('room_update', (data) => {
     renderLobby(data);
     showScreen('lobby');
   } else if (data.state === 'writing') {
+    document.getElementById('btn-writing-lobby').style.display = isHost ? '' : 'none';
     showScreen('writing');
   } else if (data.state === 'playing') {
     document.getElementById('host-controls').style.display = isHost ? '' : 'none';
@@ -385,6 +389,7 @@ socket.on('writing_started', (data) => {
   document.getElementById('name-input').value = '';
   document.getElementById('writing-form-wrap').style.display = '';
   document.getElementById('writing-wait').style.display = 'none';
+  document.getElementById('btn-writing-lobby').style.display = isHost ? '' : 'none';
   showScreen('writing');
 });
 
@@ -413,6 +418,7 @@ socket.on('countdown_started', (data) => {
 });
 
 socket.on('game_started', (data) => {
+  if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
   guessedAt = {};
   document.getElementById('host-controls').style.display = isHost ? '' : 'none';
   showScreen('playing');

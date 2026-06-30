@@ -199,8 +199,31 @@ document.getElementById('btn-leave-lobby').addEventListener('click', () => {
 document.getElementById('btn-leave-playing').addEventListener('click', () => {
   if (confirm('Odadan ayrılmak istediğine emin misin?')) leaveRoom();
 });
+document.getElementById('btn-leave-writing').addEventListener('click', () => {
+  if (confirm('Odadan ayrılmak istediğine emin misin?')) leaveRoom();
+});
+document.getElementById('btn-leave-countdown').addEventListener('click', () => {
+  if (confirm('Odadan ayrılmak istediğine emin misin?')) leaveRoom();
+});
 
 // ---- İsim yazma ----
+// İstemci içi öneri havuzları (sunucu değişmez).
+const NAME_POOLS = {
+  'Ünlüler': ['Cüneyt Arkın', 'Kemal Sunal', 'Türkan Şoray', 'Barış Manço', 'Tarkan', 'Sezen Aksu', 'Adile Naşit', 'Cem Yılmaz'],
+  'Çizgi film': ['Tom & Jerry', 'Külkedisi', 'Pikachu', 'Sünger Bob', 'Bugs Bunny', 'Şirinler', 'Heidi', 'Pink Panther'],
+  'Futbolcu': ['Lionel Messi', 'Cristiano Ronaldo', 'Arda Güler', 'Hakan Şükür', 'Maradona', 'Zinedine Zidane', 'Ronaldinho', 'Mauro Icardi'],
+  'Tarihi': ['Atatürk', 'Fatih Sultan Mehmet', 'Napolyon', 'Kleopatra', 'Albert Einstein', 'Nikola Tesla', 'Kanuni Sultan Süleyman', 'Mevlana'],
+  'Hayvan': ['Aslan', 'Penguen', 'Zürafa', 'Kanguru', 'Yunus', 'Kaplumbağa', 'Şahin', 'Panda'],
+};
+
+document.getElementById('btn-suggest').addEventListener('click', () => {
+  const cat = document.getElementById('category-select').value;
+  const pool = NAME_POOLS[cat] || [];
+  if (!pool.length) return;
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  document.getElementById('name-input').value = pick;
+});
+
 document.getElementById('name-form').addEventListener('submit', (e) => {
   e.preventDefault();
   const val = document.getElementById('name-input').value.trim();

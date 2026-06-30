@@ -10,6 +10,9 @@ const {
   generateCode,
   CODE_LENGTH,
   CODE_ALPHABET,
+  removePlayer,
+  resetGuesses,
+  guessesPayload,
 } = require('../src/rooms');
 
 function mk(ids) {
@@ -87,4 +90,33 @@ test('generateCode: doğru uzunluk ve sadece izinli karakterler', () => {
     assert.strictEqual(code.length, CODE_LENGTH);
     assert.ok([...code].every((ch) => CODE_ALPHABET.includes(ch)));
   }
+});
+
+test('removePlayer: verilen id listeden çıkarılır, yeni dizi döner', () => {
+  const p = mk(['A', 'B', 'C']);
+  const r = removePlayer(p, 'B');
+  assert.deepStrictEqual(r.map((x) => x.id), ['A', 'C']);
+  assert.deepStrictEqual(p.map((x) => x.id), ['A', 'B', 'C']); // orijinal değişmez
+});
+
+test('removePlayer: bilinmeyen id için aynı içerikli yeni dizi', () => {
+  const p = mk(['A', 'B']);
+  assert.deepStrictEqual(removePlayer(p, 'Z').map((x) => x.id), ['A', 'B']);
+});
+
+test('resetGuesses: tüm guessedAt null olur, yeni dizi döner', () => {
+  const p = mk(['A', 'B']);
+  p[0].guessedAt = 123;
+  const r = resetGuesses(p);
+  assert.ok(r.every((x) => x.guessedAt === null));
+  assert.strictEqual(p[0].guessedAt, 123); // orijinal değişmez
+});
+
+test('guessesPayload: id, name, guessedAt döner (yoksa null)', () => {
+  const p = mk(['A', 'B']);
+  p[0].guessedAt = 5;
+  assert.deepStrictEqual(guessesPayload(p), [
+    { id: 'A', name: 'A', guessedAt: 5 },
+    { id: 'B', name: 'B', guessedAt: null },
+  ]);
 });

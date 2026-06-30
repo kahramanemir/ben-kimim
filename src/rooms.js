@@ -39,6 +39,21 @@ function resetWrittenNames(players) {
   return players.map((p) => ({ ...p, writtenName: null }));
 }
 
+// Verilen id'li oyuncuyu çıkarır. YENİ dizi döner.
+function removePlayer(players, playerId) {
+  return players.filter((p) => p.id !== playerId);
+}
+
+// Tur içi "bildim" işaretlerini temizler. YENİ dizi döner.
+function resetGuesses(players) {
+  return players.map((p) => ({ ...p, guessedAt: null }));
+}
+
+// "Bilenler" yayını için sade liste.
+function guessesPayload(players) {
+  return players.map((p) => ({ id: p.id, name: p.name, guessedAt: p.guessedAt ?? null }));
+}
+
 // playerId'nin isim YAZACAĞI kişi (halkada bir sonraki).
 function targetOf(players, playerId) {
   const i = indexOfPlayer(players, playerId);
@@ -72,4 +87,7 @@ module.exports = {
   reorderPlayer,
   shufflePlayers,
   resetWrittenNames,
+  removePlayer,
+  resetGuesses,
+  guessesPayload,
 };

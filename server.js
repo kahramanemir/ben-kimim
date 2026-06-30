@@ -10,6 +10,9 @@ const {
   reorderPlayer,
   shufflePlayers,
   resetWrittenNames,
+  removePlayer,
+  resetGuesses,
+  guessesPayload,
 } = require('./src/rooms');
 
 const PORT = process.env.PORT || 3000;
@@ -41,6 +44,37 @@ function progressOf(room) {
     (p) => p.writtenName != null && p.writtenName !== ''
   ).length;
   return { submitted, total: room.players.length };
+}
+
+// Bir oyuncu (leave/kick) çıkarıldıktan SONRA odayı toparla.
+// room.players çağırandan ÖNCE filtrelenmiş olmalı.
+function afterPlayerRemoved(room, wasHost) {
+  if (wasHost) {
+    const next = room.players.find((p) => p.connected);
+    if (next) room.hostId = next.id;
+  }
+  if (room.players.length === 0) {
+    store.deleteRoom(room.code);
+    return;
+  }
+  if (room.state === 'writing') {
+    // Zincir değişti. 2 altına düştüyse lobiye dön; herkes yazdıysa geri sayım.
+    if (room.players.length < 2) {
+      room.players = resetWrittenNames(room.players);
+      room.state = 'lobby';
+      broadcastRoom(room);
+      return;
+    }
+    if (allNamesSubmitted(room.players)) {
+      broadcastRoom(room);
+      startCountdown(room);
+      return;
+    }
+    broadcastRoom(room);
+    io.to(room.code).emit('writing_progress', progressOf(room));
+    return;
+  }
+  broadcastRoom(room);
 }
 
 // Yazma fazını başlat: isimleri temizle, herkese hedefini gönder.
@@ -79,6 +113,8 @@ function sendPhaseState(sock, room, playerId) {
     const t = targetOf(room.players, playerId);
     sock.emit('writing_started', { yourTarget: t ? t.name : null });
     sock.emit('writing_progress', progressOf(room));
+  } else if (room.state === 'countdown') {
+    sock.emit('countdown_started', { seconds: COUNTDOWN_SECONDS });
   } else if (room.state === 'playing') {
     sock.emit('game_started', { yourWord: wordFor(room.players, playerId) });
   }
@@ -180,20 +216,27 @@ io.on('connection', (socket) => {
     const room = store.getRoom(myCode);
     if (!room) return;
     const wasHost = room.hostId === myPlayerId;
-    room.players = room.players.filter((p) => p.id !== myPlayerId);
+    room.players = removePlayer(room.players, myPlayerId);
     socket.leave(room.code);
-    // Host ayrıldıysa en erken katılmış bağlı oyuncuya devret.
-    if (wasHost) {
-      const next = room.players.find((p) => p.connected);
-      if (next) room.hostId = next.id;
-    }
-    if (room.players.length === 0) {
-      store.deleteRoom(room.code);
-    } else {
-      broadcastRoom(room);
-    }
+    afterPlayerRemoved(room, wasHost);
     myCode = null;
     myPlayerId = null;
+  });
+
+  socket.on('kick_player', ({ playerId }) => {
+    const room = store.getRoom(myCode);
+    if (!room || room.hostId !== myPlayerId) return;
+    if (!playerId || playerId === myPlayerId) return;
+    const target = room.players.find((p) => p.id === playerId);
+    if (!target) return;
+    const targetSocketId = target.socketId;
+    room.players = removePlayer(room.players, playerId);
+    afterPlayerRemoved(room, false); // host kendini atamaz, devir gerekmez
+    if (targetSocketId) {
+      const ts = io.sockets.sockets.get(targetSocketId);
+      if (ts) ts.leave(room.code);
+      io.to(targetSocketId).emit('kicked');
+    }
   });
 
   socket.on('disconnect', () => {

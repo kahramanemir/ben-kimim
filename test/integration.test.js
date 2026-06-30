@@ -7,10 +7,10 @@ const { io: ioc } = require('socket.io-client');
 const PORT = 41234;
 const URL = `http://localhost:${PORT}`;
 
-function startServer() {
+function startServer(countdown = '1') {
   return new Promise((resolve, reject) => {
     const child = spawn('node', [path.join(__dirname, '..', 'server.js')], {
-      env: { ...process.env, PORT: String(PORT), COUNTDOWN_SECONDS: '1' },
+      env: { ...process.env, PORT: String(PORT), COUNTDOWN_SECONDS: countdown },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
     const timer = setTimeout(() => reject(new Error('server start timeout')), 5000);
@@ -222,4 +222,101 @@ test('yazma sırasında kopan oyuncu yeniden bağlanınca fazını geri alır', 
   assert.ok(res.ok);
   const reTarget = await w2b;
   assert.strictEqual(reTarget.yourTarget, 'Veli'); // p2'nin hedefi hâlâ Veli
+});
+
+test('host kick: atılan oyuncu listeden düşer ve kicked alır', async (t) => {
+  const server = await startServer();
+  const c1 = connect();
+  const c2 = connect();
+  const c3 = connect();
+  t.after(() => { c1.close(); c2.close(); c3.close(); server.kill(); });
+
+  const created = await emitAck(c1, 'create_room', { nickname: 'Emir', playerId: 'p1' });
+  const code = created.code;
+  const sees3 = waitForPlayers(c1, 3);
+  await emitAck(c2, 'join_room', { code, nickname: 'Ali', playerId: 'p2' });
+  await emitAck(c3, 'join_room', { code, nickname: 'Veli', playerId: 'p3' });
+  await sees3;
+
+  const kicked = once(c3, 'kicked');
+  const sees2 = waitForPlayers(c1, 2);
+  c1.emit('kick_player', { playerId: 'p3' });
+  await kicked;
+  const after = await sees2;
+  assert.deepStrictEqual(after.players.map((p) => p.id), ['p1', 'p2']);
+});
+
+test('yazma fazında oyuncu ayrılınca kalan herkes yazmışsa geri sayım başlar', async (t) => {
+  const server = await startServer();
+  const c1 = connect();
+  const c2 = connect();
+  const c3 = connect();
+  t.after(() => { c1.close(); c2.close(); c3.close(); server.kill(); });
+
+  const created = await emitAck(c1, 'create_room', { nickname: 'Emir', playerId: 'p1' });
+  const code = created.code;
+  const sees3 = waitForPlayers(c1, 3);
+  await emitAck(c2, 'join_room', { code, nickname: 'Ali', playerId: 'p2' });
+  await emitAck(c3, 'join_room', { code, nickname: 'Veli', playerId: 'p3' });
+  await sees3;
+
+  const w1 = once(c1, 'writing_started');
+  c1.emit('start_writing');
+  await w1;
+
+  // p1 ve p2 yazar; c1 "2 gönderdi" ilerlemesini görene kadar bekle (deterministik)
+  const prog = new Promise((resolve) => {
+    const h = (d) => { if (d.submitted === 2) { c1.off('writing_progress', h); resolve(); } };
+    c1.on('writing_progress', h);
+  });
+  c1.emit('submit_name', { name: 'W1' });
+  c2.emit('submit_name', { name: 'W2' });
+  await prog;
+
+  // p3 yazmadan ayrılır -> kalan p1,p2 yazmış -> geri sayım -> game_started
+  const g1 = once(c1, 'game_started');
+  c3.emit('leave_room');
+  const word1 = await g1;
+  assert.strictEqual(word1.yourWord, 'W2'); // 2 kişilik halkada p1'in öncesi p2
+});
+
+test('geri sayım sırasında yeniden bağlanan oyuncu countdown_started alır', async (t) => {
+  const server = await startServer('5');
+  const c1 = connect();
+  const c2 = connect();
+  const c3 = connect();
+  let c2b;
+  t.after(() => { c1.close(); c3.close(); if (c2b) c2b.close(); server.kill(); });
+
+  const created = await emitAck(c1, 'create_room', { nickname: 'Emir', playerId: 'p1' });
+  const code = created.code;
+  const sees3 = waitForPlayers(c1, 3);
+  await emitAck(c2, 'join_room', { code, nickname: 'Ali', playerId: 'p2' });
+  await emitAck(c3, 'join_room', { code, nickname: 'Veli', playerId: 'p3' });
+  await sees3;
+
+  const cd1 = once(c1, 'countdown_started');
+  c1.emit('start_writing');
+  await once(c1, 'writing_started');
+  c1.emit('submit_name', { name: 'W1' });
+  c2.emit('submit_name', { name: 'W2' });
+  c3.emit('submit_name', { name: 'W3' });
+  await cd1; // geri sayım başladı (5s)
+
+  // c2 kopar, p2 "bağlı değil" görününce yeniden bağlan
+  const p2Off = new Promise((resolve) => {
+    const h = (d) => {
+      const p2 = d.players.find((x) => x.id === 'p2');
+      if (p2 && !p2.connected) { c1.off('room_update', h); resolve(); }
+    };
+    c1.on('room_update', h);
+  });
+  c2.close();
+  await p2Off;
+
+  c2b = connect();
+  const cd2 = once(c2b, 'countdown_started');
+  await emitAck(c2b, 'join_room', { code, nickname: 'Ali', playerId: 'p2' });
+  const data = await cd2;
+  assert.strictEqual(data.seconds, 5);
 });

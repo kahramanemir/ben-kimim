@@ -77,9 +77,9 @@ function afterPlayerRemoved(room, wasHost) {
   broadcastRoom(room);
 }
 
-// Yazma fazını başlat: isimleri temizle, herkese hedefini gönder.
+// Yazma fazını başlat: isimleri ve bildim işaretlerini temizle, herkese hedefini gönder.
 function beginWriting(room) {
-  room.players = resetWrittenNames(room.players);
+  room.players = resetGuesses(resetWrittenNames(room.players));
   room.state = 'writing';
   broadcastRoom(room);
   for (const p of room.players) {
@@ -155,6 +155,7 @@ io.on('connection', (socket) => {
         writtenName: null,
         connected: true,
         socketId: socket.id,
+        guessedAt: null,
       };
       room.players.push(player);
     }
@@ -203,10 +204,19 @@ io.on('connection', (socket) => {
     beginWriting(room);
   });
 
+  socket.on('guessed', () => {
+    const room = store.getRoom(myCode);
+    if (!room || room.state !== 'playing') return;
+    const me = room.players.find((p) => p.id === myPlayerId);
+    if (!me) return;
+    if (me.guessedAt == null) me.guessedAt = Date.now();
+    io.to(room.code).emit('guesses', { players: guessesPayload(room.players) });
+  });
+
   socket.on('return_to_lobby', () => {
     const room = store.getRoom(myCode);
     if (!room || room.hostId !== myPlayerId) return;
-    room.players = resetWrittenNames(room.players);
+    room.players = resetGuesses(resetWrittenNames(room.players));
     room.state = 'lobby';
     broadcastRoom(room);
   });

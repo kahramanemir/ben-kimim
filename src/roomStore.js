@@ -24,6 +24,7 @@ function createStore() {
           writtenName: null,
           connected: true,
           socketId: host.socketId || null,
+          guessedAt: null,
         },
       ],
       createdAt: Date.now(),

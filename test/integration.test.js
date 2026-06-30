@@ -320,3 +320,34 @@ test('geri sayım sırasında yeniden bağlanan oyuncu countdown_started alır',
   const data = await cd2;
   assert.strictEqual(data.seconds, 5);
 });
+
+test('guessed: bilen oyuncu guesses yayınında işaretlenir', async (t) => {
+  const server = await startServer();
+  const c1 = connect();
+  const c2 = connect();
+  const c3 = connect();
+  t.after(() => { c1.close(); c2.close(); c3.close(); server.kill(); });
+
+  const created = await emitAck(c1, 'create_room', { nickname: 'Emir', playerId: 'p1' });
+  const code = created.code;
+  const sees3 = waitForPlayers(c1, 3);
+  await emitAck(c2, 'join_room', { code, nickname: 'Ali', playerId: 'p2' });
+  await emitAck(c3, 'join_room', { code, nickname: 'Veli', playerId: 'p3' });
+  await sees3;
+
+  const g1 = once(c1, 'game_started');
+  c1.emit('start_writing');
+  await once(c1, 'writing_started');
+  c1.emit('submit_name', { name: 'W1' });
+  c2.emit('submit_name', { name: 'W2' });
+  c3.emit('submit_name', { name: 'W3' });
+  await g1;
+
+  const guesses1 = once(c1, 'guesses');
+  c2.emit('guessed');
+  const gdata = await guesses1;
+  const p2 = gdata.players.find((p) => p.id === 'p2');
+  const p1 = gdata.players.find((p) => p.id === 'p1');
+  assert.ok(p2.guessedAt != null, 'p2 bildi işaretlenmeli');
+  assert.strictEqual(p1.guessedAt, null, 'p1 henüz bilmedi');
+});

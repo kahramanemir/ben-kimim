@@ -21,6 +21,12 @@
   <section id="screen-lobby" class="screen">
     <h2>Oda Kodu</h2>
     <div id="lobby-code" class="code"></div>
+    <div class="code-actions">
+      <button id="btn-copy" class="ghost">📋 Kopyala</button>
+      <button id="btn-share" class="ghost" style="display:none">Paylaş</button>
+    </div>
+    <div id="lobby-qr" class="qr"></div>
+    <p class="note">QR'ı okutan arkadaşların doğrudan bu odaya gelir</p>
     <ul id="player-list"></ul>
     <p id="lobby-note" class="note"></p>
     <button id="btn-shuffle">Sırayı Karıştır 🔀</button>
@@ -33,6 +39,16 @@
     <div id="writing-form-wrap">
       <p class="label">Şu kişiye bir isim yaz:</p>
       <div id="writing-target" class="target"></div>
+      <div class="suggest-row">
+        <select id="category-select">
+          <option value="Ünlüler">Ünlüler</option>
+          <option value="Çizgi film">Çizgi film</option>
+          <option value="Futbolcu">Futbolcu</option>
+          <option value="Tarihi">Tarihi</option>
+          <option value="Hayvan">Hayvan</option>
+        </select>
+        <button type="button" id="btn-suggest" class="ghost">💡 Öner</button>
+      </div>
       <form id="name-form">
         <input id="name-input" type="text" maxlength="40" placeholder="Örn: Cüneyt Arkın" />
         <button type="submit" class="primary">Gönder</button>
@@ -42,12 +58,14 @@
       <p class="label">Diğerleri yazıyor…</p>
       <div id="writing-count" class="code"></div>
     </div>
+    <button id="btn-leave-writing" class="ghost">Odadan Ayrıl</button>
   </section>
 
   <!-- GERİ SAYIM -->
   <section id="screen-countdown" class="screen dark">
     <div id="countdown-number" class="countdown"></div>
     <p class="label light">Telefonu alnına koy!</p>
+    <button id="btn-leave-countdown" class="ghost">Odadan Ayrıl</button>
   </section>
 
   <!-- OYUN -->
@@ -55,6 +73,8 @@
     <div id="the-word" class="word" style="display:none"></div>
     <div id="reveal-timer" class="reveal-timer" style="display:none"></div>
     <button id="btn-reveal" class="primary" style="display:none">Ben Kimim?</button>
+    <button id="btn-guessed" class="ghost">Bildim 🎉</button>
+    <ul id="guess-list" class="guess-list"></ul>
     <div id="host-controls" class="controls" style="display:none">
       <button id="btn-again" class="primary">Tekrar Oyna</button>
       <button id="btn-lobby">Lobiye Dön</button>
@@ -62,6 +82,7 @@
     <button id="btn-leave-playing" class="ghost">Odadan Ayrıl</button>
   </section>
 
+  <script src="/vendor/qrcode.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/app.js"></script>
 </body>

@@ -108,3 +108,38 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 @media (min-width: 600px) {
   .word { font-size: 5rem; }
 }
+
+.code-actions { display: flex; gap: 8px; justify-content: center; }
+.code-actions button { width: auto; }
+.qr { background: #fff; padding: 10px; border-radius: 12px; line-height: 0; }
+.qr svg { width: 180px; height: 180px; display: block; }
+
+.suggest-row { display: flex; gap: 8px; width: 100%; max-width: 360px; }
+.suggest-row select {
+  flex: 1;
+  font-size: 1rem;
+  padding: 10px;
+  border: 2px solid #ccd;
+  border-radius: 12px;
+  background: #fff;
+}
+.suggest-row button { width: auto; white-space: nowrap; }
+
+.kick {
+  width: 36px;
+  padding: 4px;
+  font-size: 1rem;
+  background: #fde2e2;
+  color: #c0392b;
+  margin-left: 8px;
+}
+
+.guess-list {
+  list-style: none;
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}

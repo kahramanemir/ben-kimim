@@ -17,6 +17,8 @@ let wakeLock = null;
 let countdownTimer = null;
 let revealTimer = null;
 let myWord = '';
+let playingPlayers = [];
+let guessedAt = {};
 
 // Kelimenin alında herkese açık göründüğü süre (sonra "Ben Kimim?" gelir).
 const REVEAL_SECONDS = 10;
@@ -237,6 +239,60 @@ document.getElementById('name-form').addEventListener('submit', (e) => {
 document.getElementById('btn-again').addEventListener('click', () => socket.emit('play_again'));
 document.getElementById('btn-lobby').addEventListener('click', () => socket.emit('return_to_lobby'));
 
+// ---- Ses + titreşim yardımcıları (best-effort, desteklenmiyorsa sessiz) ----
+function buzz(pattern) {
+  try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) {}
+}
+function beep(freq, dur) {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g);
+    g.connect(ctx.destination);
+    o.type = 'sine';
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0.15, ctx.currentTime);
+    o.start();
+    o.stop(ctx.currentTime + dur);
+    o.onended = () => ctx.close();
+  } catch (e) {}
+}
+
+// ---- Oyun ekranı: Bilenler listesi ----
+function renderPlaying() {
+  const list = document.getElementById('guess-list');
+  list.innerHTML = '';
+  const guessed = playingPlayers
+    .filter((p) => guessedAt[p.id] != null)
+    .sort((a, b) => guessedAt[a.id] - guessedAt[b.id]);
+  const pending = playingPlayers.filter((p) => guessedAt[p.id] == null);
+  guessed.forEach((p, i) => list.appendChild(playerRow(p, i + 1 + '. ' + p.name + ' 🎉')));
+  pending.forEach((p) => list.appendChild(playerRow(p, p.name + ' — tahmin ediyor')));
+}
+
+function playerRow(p, label) {
+  const li = document.createElement('li');
+  li.className = 'player';
+  const span = document.createElement('span');
+  span.textContent = label + (p.id === currentHostId ? ' 👑' : '');
+  li.appendChild(span);
+  if (isHost && p.id !== playerId) {
+    const kick = document.createElement('button');
+    kick.className = 'kick';
+    kick.textContent = '✕';
+    kick.onclick = () => {
+      if (confirm(p.name + ' oyuncusunu atmak istiyor musun?')) {
+        socket.emit('kick_player', { playerId: p.id });
+      }
+    };
+    li.appendChild(kick);
+  }
+  return li;
+}
+
 // ---- Kim olduğunu öğrenme akışı ----
 // Oyun başlayınca kelime önce 10 sn açıkça görünür (telefon alında, karşıdakiler
 // okur). Süre dolunca kelime gizlenir ve "Ben Kimim?" butonu çıkar.
@@ -278,6 +334,10 @@ document.getElementById('btn-reveal').addEventListener('click', () => {
   wordEl.style.display = '';
 });
 
+document.getElementById('btn-guessed').addEventListener('click', () => {
+  socket.emit('guessed');
+});
+
 // ---- Socket olayları ----
 socket.on('connect', () => {
   if (myCode && myName) {
@@ -303,6 +363,8 @@ socket.on('room_update', (data) => {
     showScreen('writing');
   } else if (data.state === 'playing') {
     document.getElementById('host-controls').style.display = isHost ? '' : 'none';
+    playingPlayers = data.players.map((p) => ({ id: p.id, name: p.name }));
+    renderPlaying();
     showScreen('playing');
   }
 });
@@ -318,6 +380,7 @@ socket.on('kicked', () => {
 });
 
 socket.on('writing_started', (data) => {
+  guessedAt = {};
   document.getElementById('writing-target').textContent = data.yourTarget || '';
   document.getElementById('name-input').value = '';
   document.getElementById('writing-form-wrap').style.display = '';
@@ -330,6 +393,8 @@ socket.on('writing_progress', (data) => {
 });
 
 socket.on('countdown_started', (data) => {
+  buzz([120, 60, 120]);
+  beep(880, 0.15);
   showScreen('countdown');
   let n = data.seconds;
   const el = document.getElementById('countdown-number');
@@ -339,6 +404,8 @@ socket.on('countdown_started', (data) => {
     n -= 1;
     el.textContent = n > 0 ? n : '👀';
     if (n <= 0) {
+      buzz([300]);
+      beep(1320, 0.25);
       clearInterval(countdownTimer);
       countdownTimer = null;
     }
@@ -346,8 +413,16 @@ socket.on('countdown_started', (data) => {
 });
 
 socket.on('game_started', (data) => {
+  guessedAt = {};
   document.getElementById('host-controls').style.display = isHost ? '' : 'none';
   showScreen('playing');
   startReveal(data.yourWord);
   requestWakeLock();
+});
+
+socket.on('guesses', (data) => {
+  guessedAt = {};
+  data.players.forEach((p) => { guessedAt[p.id] = p.guessedAt; });
+  playingPlayers = data.players.map((p) => ({ id: p.id, name: p.name }));
+  renderPlaying();
 });

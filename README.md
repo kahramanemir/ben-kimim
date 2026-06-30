@@ -10,12 +10,16 @@ forehead. Start a new round with "Play Again".
 ## How to play
 
 1. Someone taps **Create Room** and shares the 5-digit code with friends.
-2. Everyone taps **Join Room** with a nickname + the code.
+2. Friends join by entering the code + a nickname — or by scanning the lobby **QR code**, which opens the app with the room code pre-filled (just type a nickname and join).
 3. The host arranges the order (chain) in the lobby and taps **Start**.
 4. Everyone writes a name for the next player.
 5. Once all names are in, the countdown begins — put your phone on your forehead.
 6. Your phone shows the name assigned to you; use the hints to guess who you are.
 7. When the round ends, the host starts a new one with **Play Again**.
+
+The host can reorder or **remove** players, suggest names by category while writing,
+and everyone gets a vibrate/beep when the countdown starts. After a round, tap
+**Bildim 🎉** when you guess yourself; the lobby shows who has guessed.
 
 ## Running locally
 

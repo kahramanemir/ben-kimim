@@ -6,10 +6,10 @@ if (!playerId) {
   playerId = 'p_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
   localStorage.setItem('benkimim_pid', playerId);
 }
-// Oda kodu sessionStorage'da tutulur: aynı sekmede yenileme/kopma sonrası
-// odaya geri dönülür, ama site yeni sekmede ya da sonradan açıldığında eski
-// odaya otomatik atmaz (ana sayfaya gelir).
-let myCode = sessionStorage.getItem('benkimim_code') || null;
+// Oda kodu localStorage'da tutulur: sekme/tarayıcı kapatılsa bile aynı odaya
+// geri dönülebilir. QR/link ile gelen ziyaretçiler için blok aşağıda bu değeri
+// sıfırlar, böylece eski odaya otomatik atılmaz.
+let myCode = localStorage.getItem('benkimim_code') || null;
 let myName = localStorage.getItem('benkimim_name') || '';
 let isHost = false;
 let wakeLock = null;
@@ -54,6 +54,16 @@ const nicknameInput = document.getElementById('nickname');
 const codeInput = document.getElementById('join-code');
 nicknameInput.value = myName;
 
+// QR/link ile gelen ziyaretçi: oda kodunu ön-doldur, eski kayıtlı odaya otomatik dönme.
+const urlRoom = (new URLSearchParams(location.search).get('room') || '').toUpperCase().trim();
+if (urlRoom) {
+  codeInput.value = urlRoom;
+  myCode = null;
+  localStorage.removeItem('benkimim_code');
+  history.replaceState({}, '', location.pathname);
+  nicknameInput.focus();
+}
+
 document.getElementById('btn-create').addEventListener('click', () => {
   const nickname = nicknameInput.value.trim();
   if (!nickname) return alert('Bir takma ad gir');
@@ -62,7 +72,7 @@ document.getElementById('btn-create').addEventListener('click', () => {
   socket.emit('create_room', { nickname, playerId }, (res) => {
     if (!res || !res.ok) return alert((res && res.error) || 'Hata');
     myCode = res.code;
-    sessionStorage.setItem('benkimim_code', myCode);
+    localStorage.setItem('benkimim_code', myCode);
   });
 });
 
@@ -76,7 +86,7 @@ document.getElementById('btn-join').addEventListener('click', () => {
   socket.emit('join_room', { code, nickname, playerId }, (res) => {
     if (!res || !res.ok) return alert((res && res.error) || 'Hata');
     myCode = res.code;
-    sessionStorage.setItem('benkimim_code', myCode);
+    localStorage.setItem('benkimim_code', myCode);
   });
 });
 
@@ -133,7 +143,7 @@ document.getElementById('btn-shuffle').addEventListener('click', () => socket.em
 function leaveRoom() {
   socket.emit('leave_room');
   myCode = null;
-  sessionStorage.removeItem('benkimim_code');
+  localStorage.removeItem('benkimim_code');
   if (countdownTimer) clearInterval(countdownTimer);
   if (revealTimer) clearInterval(revealTimer);
   releaseWakeLock();
@@ -207,7 +217,7 @@ socket.on('connect', () => {
   if (myCode && myName) {
     socket.emit('join_room', { code: myCode, nickname: myName, playerId }, (res) => {
       if (!res || !res.ok) {
-        sessionStorage.removeItem('benkimim_code');
+        localStorage.removeItem('benkimim_code');
         myCode = null;
         showScreen('home');
       }
